@@ -32,14 +32,11 @@ def walmart_get_offerid(r, productid):
     logger.debug('Running walmart_get_offerid({0})'.format(productid))
 
     while True:
-        resp = \
-                json.loads(r.get('http://www.walmart.com/product/mobile/api/{0}?location=01906'.format(productid)).text)
-        logger.debug('Walmart get_offerid response: {0}'.format(
-          json.dumps(resp,indent=4,sort_keys=True)))
+        resp = json.loads(r.get('http://www.walmart.com/product/mobile/api/{0}?location=01906'.format(productid)).text)
+        logger.debug('Walmart get_offerid response: {0}'.format(json.dumps(resp,indent=4,sort_keys=True)))
 
         try:
-            _offerid = filter(lambda p: p['seller']['name'] == 'Walmart.com',
-                    resp['product']['buyingOptions']['marketplaceOptions'])
+            _offerid = filter(lambda p: p['seller']['name'] == 'Walmart.com', resp['product']['buyingOptions']['marketplaceOptions'])
             offerid = _offerid[0]['offerId']
             logger.info('OfferId discovered: {0}'.format(offerid))
             return offerid
@@ -47,8 +44,6 @@ def walmart_get_offerid(r, productid):
             logger.info('No WalMart offerid discovered, continuing...')
             time.sleep(0.2)
             continue
-
-
 
 def walmart_signin(r, username, password):
     logger.debug('Signing with username={0}, password={1}'.format(username, password))
@@ -62,50 +57,40 @@ def walmart_signin(r, username, password):
                     },
                 'password': password,
                 }).text)
-    logger.debug('Sign in JSON response: {0}'.format(
-        json.dumps(resp, indent=4, sort_keys=True)))
+    logger.debug('Sign in JSON response: {0}'.format(json.dumps(resp, indent=4, sort_keys=True)))
 
-    return (resp.has_key('data') and resp['data'].has_key('loggedIn') \
-            and resp['data']['loggedIn'] == True)
+    return (resp.has_key('data') and resp['data'].has_key('loggedIn') and resp['data']['loggedIn'] == True)
 
 def walmart_register(r, username):
     logger.debug('Initializing session -- walmart_register()')
-    resp = \
-    json.loads(r.post('https://store.mobile.walmart.com//sc/v3/user/register.json',
+    resp = json.loads(r.post('https://store.mobile.walmart.com//sc/v3/user/register.json',
             json = {
                 'username': username,
                 }).text)
 
-    logger.debug('Register response: {0}'.format(
-        json.dumps(resp, indent=4, sort_keys=True)))
+    logger.debug('Register response: {0}'.format(json.dumps(resp, indent=4, sort_keys=True)))
     logger.info('Walmart session initialized.')
 
 def walmart_get_shipping_address(r):
     logger.info('Caching shipping information.')
-    resp = \
-    json.loads(r.get('https://www.walmart.com/api/checkout-customer/:CID/shipping-address').text)
-    logger.debug('Shipping information response: {0}'.format(
-        json.dumps(resp, indent=4, sort_keys=True)))
+    resp = json.loads(r.get('https://www.walmart.com/api/checkout-customer/:CID/shipping-address').text)
+    logger.debug('Shipping information response: {0}'.format(json.dumps(resp, indent=4, sort_keys=True)))
 
     if len(resp) > 0 and 'addressId' in resp[0]:
-       logger.info('Using address: {0}'.format(json.dumps(resp[0],
-       indent=4, sort_keys=True)))
+       logger.info('Using address: {0}'.format(json.dumps(resp[0], indent=4, sort_keys=True)))
     else:
         logger.critical('No addresses set in your account. Exiting.')
         sys.exit(0)
 
     return resp[0]
 
-
 def walmart_get_credit_card_fields(r):
     logger.info('Caching credit card fields')
-    resp = \
-    json.loads(r.get('https://www.walmart.com/api/checkout-customer/:CID/credit-card').text)
-    logger.debug('Credit Card info response: {0}'.format(json.dumps(
-        resp, indent=4, sort_keys=True)))
+    resp = json.loads(r.get('https://www.walmart.com/api/checkout-customer/:CID/credit-card').text)
+    logger.debug('Credit Card info response: {0}'.format(json.dumps(resp, indent=4, sort_keys=True)))
+
     if len(resp) > 0 and 'id' in resp[0]:
-        logger.info('Using CC info: {0}'.format(
-            json.dumps(resp[0], indent=4, sort_keys=True)))
+        logger.info('Using CC info: {0}'.format(json.dumps(resp[0], indent=4, sort_keys=True)))
     else:
         logger.critical('CC info not set in your account. Exiting.')
         sys.exit(0)
@@ -124,30 +109,23 @@ def walmart_atc(r,offerid):
                     'quantity': 1,
                     'offerId': offerid
                     }).text)
-        logger.debug('ATC response: {0}'.format(
-            json.dumps(resp, indent=4, sort_keys=True)))
+        logger.debug('ATC response: {0}'.format(json.dumps(resp, indent=4, sort_keys=True)))
         logger.debug('Current cookies: {0}'.format(__cookies__))
+
         if 'statusCode' in resp and resp['statusCode'] == 400:
-            logger.critical('Product {0} not cartable. Retrying.'
-                    .format(offerid))
+            logger.critical('Product {0} not cartable. Retrying.'.format(offerid))
             time.sleep(0.2)
             continue
         elif 'statusCode' in resp and resp['statusCode'] == 502:
-            logger.critical('Unable to cart {0}. Bad gateway. Retrying. Error code: {1}'.format(
-                offerid, json.dumps(resp,indent=4,sort_keys=True)))
+            logger.critical('Unable to cart {0}. Bad gateway. Retrying. Error code: {1}'.format(offerid, json.dumps(resp,indent=4,sort_keys=True)))
             time.sleep(0.02)
             continue
         elif 'statusCode' in resp and resp['statusCode'] == 500:
-            logger.critical('Unable to cart {0}. Internal error. Retrying. Error code: {1}'.format(
-                offerid, json.dumps(resp,indent=4,sort_keys=True)))
+            logger.critical('Unable to cart {0}. Internal error. Retrying. Error code: {1}'.format(offerid, json.dumps(resp,indent=4,sort_keys=True)))
             time.sleep(0.02)
             continue
         else:
-            logger.info('Product {0} carted! Response: {1}'.format(
-                offerid,
-                json.dumps(resp,
-                    indent=4,
-                    sort_keys=True)))
+            logger.info('Product {0} carted! Response: {1}'.format(offerid, json.dumps(resp, indent=4, \sort_keys=True)))
             logger.debug('Cookies after carting {0}'.format(r.cookies))
             break
 
@@ -158,45 +136,35 @@ def walmart_checkout(r, SHIPPING_INFO, CC_INFO, CVV):
     __cookies__['com.wm.reflector'] = '12345'
 
     logger.info('Initiate checkout contract.')
-    resp = json.loads(r.post(
-            'https://www.walmart.com/api/checkout/v2/contract',
-            cookies = __cookies__,
+    resp = json.loads(r.post('https://www.walmart.com/api/checkout/v2/contract', cookies = __cookies__,
             json = {
                 'customerId:CID': '',
                 'customerType:type': '',
                 'affiliateInfo:com.wm.reflector': '',
                 'crt:CRT': ''
                 }).text)
-    logger.debug('Contract response: {0}'.format(
-        json.dumps(resp, indent=4, sort_keys=True)))
+    logger.debug('Contract response: {0}'.format(json.dumps(resp, indent=4, sort_keys=True)))
 
     try:
         item_id = resp['groups'][0]['itemIds'][0]
     except:
-        logger.critical('\
-Could not find item_id in cart. Your cart may be empty or your cart \
-have more than one product in it. Clear it and retry.')
-        logger.critical('Contract response: {0}'.format(
-            json.dumps(resp, indent=4,sort_keys=True)))
+        logger.critical('Could not find item_id in cart. Your cart may be empty or your cart have more than one product in it. Clear it and retry.')
+        logger.critical('Contract response: {0}'.format(json.dumps(resp, indent=4,sort_keys=True)))
         sys.exit(1)
 
     logger.info('Found cart item id {0}'.format(item_id))
     logger.info('Setting shipping preferences.')
-    resp = json.loads(r.post(
-        'https://www.walmart.com/api/checkout/v2/contract/:PCID/fulfillment',
+    resp = json.loads(r.post('https://www.walmart.com/api/checkout/v2/contract/:PCID/fulfillment',
         json = {
             'groups': [ {
                 'fulfillmentOption': 'S2H',
                 'shipMethod': 'VALUE',
                 'itemIds': [item_id]
                 } ]}).text)
-    logger.debug('Shipping preferences response: {0}'.format(
-        json.dumps(resp, indent=4, sort_keys=True)))
 
+    logger.debug('Shipping preferences response: {0}'.format(json.dumps(resp, indent=4, sort_keys=True)))
     logger.info('Setting shipping address')
-    resp = \
-    json.loads(r.post(
-        'https://www.walmart.com/api/checkout/v2/contract/:PCID/shipping-address',
+    resp = json.loads(r.post('https://www.walmart.com/api/checkout/v2/contract/:PCID/shipping-address',
         json = {
             'addressLineOne': SHIPPING_INFO['addressLineOne'],
             'addressLineTwo': SHIPPING_INFO['addressLineTwo'],
@@ -209,13 +177,10 @@ have more than one product in it. Clear it and retry.')
             'preferenceId': SHIPPING_INFO['id'],
             'changedFields': [],
             }).text)
-    logger.debug('Set shipping address response: {0}'.format(
-        json.dumps(resp, indent=4, sort_keys=True)))
 
-
+    logger.debug('Set shipping address response: {0}'.format(json.dumps(resp, indent=4, sort_keys=True)))
     logger.info('Setting payment')
-    resp = \
-    json.loads(r.post('https://www.walmart.com/api/checkout/v2/contract/:PCID/payment',
+    resp = json.loads(r.post('https://www.walmart.com/api/checkout/v2/contract/:PCID/payment',
             json={
                 'payments': [
                     {
@@ -235,19 +200,13 @@ have more than one product in it. Clear it and retry.')
                         'phone': CC_INFO['phone']
                     }
                 ]}).text)
-    logger.debug('Setting payment info response: {0}'.format(
-        json.dumps(resp, indent=4, sort_keys=True)))
 
+    logger.debug('Setting payment info response: {0}'.format(json.dumps(resp, indent=4, sort_keys=True)))
     logger.info('Finalizing order')
 
     while True:
-        resp = \
-        json.loads(r.put(
-            'https://www.walmart.com/api/checkout/v2/contract/:PCID/order',
-            json={}).text)
-
-        logger.debug('Finalize response: {0}'.format(
-            json.dumps(resp, indent=4, sort_keys=True)))
+        resp = json.loads(r.put('https://www.walmart.com/api/checkout/v2/contract/:PCID/order',json={}).text)
+        logger.debug('Finalize response: {0}'.format(json.dumps(resp, indent=4, sort_keys=True)))
 
         if 'order' in resp:
             logger.info('Checkout successful!')
@@ -260,16 +219,14 @@ have more than one product in it. Clear it and retry.')
 def runwally(username, password, cvv, offerid,productid):
     with requests.Session() as r:
 
-        retries = Retry(total=9999,
-            backoff_factor=0.1,
-            status_forcelist=[ 500, 502, 503, 504 ])
+        retries = Retry(total=9999, backoff_factor=0.1, status_forcelist=[ 500, 502, 503, 504 ])
         r.mount('http://', HTTPAdapter(max_retries=retries))
         r.mount('https://', HTTPAdapter(max_retries=retries))
 
         r.headers.update({'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 9_3_3 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Mobile/13G34 Walmart WMTAPP'})
 
         walmart_pre_signin(r)
-        
+
         if walmart_signin(r, username, password):
             logger.info('Walmart login successful!')
         else:
@@ -279,9 +236,7 @@ def runwally(username, password, cvv, offerid,productid):
         walmart_register(r, username)
 
         walmart_scheduler = BackgroundScheduler()
-        walmart_scheduler.add_job(walmart_register, 'interval',
-                args=[r,username],
-                seconds=10.0,id='walmart_register')
+        walmart_scheduler.add_job(walmart_register, 'interval', args=[r,username], seconds=10.0,id='walmart_register')
         walmart_scheduler.start()
 
         SHIPPING_INFO = walmart_get_shipping_address(r)
@@ -296,7 +251,6 @@ def runwally(username, password, cvv, offerid,productid):
 
         walmart_scheduler.shutdown()
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('username', help="Your walmart username (email)")
@@ -305,8 +259,7 @@ if __name__ == "__main__":
     id_parser.add_argument('-offerid', help="offer id",default=None)
     id_parser.add_argument('-productid', help="product id",default=None)
     parser.add_argument('cvv', help="credit card cvv")
-    parser.add_argument("-d", "--debug", help="Debug output.",
-    action='store_true')
+    parser.add_argument("-d", "--debug", help="Debug output.", action='store_true')
 
     args = parser.parse_args()
 
@@ -315,5 +268,4 @@ if __name__ == "__main__":
     else:
         logger.setLevel(logging.INFO)
 
-    runwally(args.username, args.password, args.cvv, args.offerid,
-            args.productid)
+    runwally(args.username, args.password, args.cvv, args.offerid, args.productid)
