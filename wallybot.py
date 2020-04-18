@@ -125,7 +125,7 @@ def walmart_atc(r,offerid):
             time.sleep(0.02)
             continue
         else:
-            logger.info('Product {0} carted! Response: {1}'.format(offerid, json.dumps(resp, indent=4, \sort_keys=True)))
+            logger.info('Product {0} carted! Response: {1}'.format(offerid, json.dumps(resp, indent=4, sort_keys=True)))
             logger.debug('Cookies after carting {0}'.format(r.cookies))
             break
 
@@ -236,7 +236,7 @@ def runwally(username, password, cvv, offerid,productid):
         walmart_register(r, username)
 
         walmart_scheduler = BackgroundScheduler()
-        walmart_scheduler.add_job(walmart_register, 'interval', args=[r,username], seconds=10.0,id='walmart_register')
+        walmart_scheduler.add_job(walmart_register, 'interval', args=[r, username], seconds=10.0, id='walmart_register')
         walmart_scheduler.start()
 
         SHIPPING_INFO = walmart_get_shipping_address(r)
